@@ -1,12 +1,17 @@
 const User = require('../db/Shemas/usersModel')
+const { nanoid } = require('nanoid')
+const { sendEmail } = require('../services/serviceEmail')
 
 const findUserByEmail = async email => {
   return await User.findOne({ email, verify: true })
 }
 
-const addUser = async options => {
-  const user = new User(options)
-  return await user.save()
+const addUser = async body => {
+  const verifyToken = nanoid()
+  const { email } = body
+  await sendEmail(verifyToken, email)
+  const user = await User({ ...body, verifyToken })
+  return user.save()
 }
 
 const findUserById = async id => {
