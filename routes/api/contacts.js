@@ -1,17 +1,21 @@
 const express = require('express')
 const router = express.Router()
-const Contacts = require('../../../model/index')
-const { validateCreateContact, validateUpdateContact } = require('./validation')
+const Contacts = require('../../controllers/contactsContr')
+const {
+  validateCreateContact,
+  validateUpdateContact,
+} = require('../../middlewares/validation')
 
-router.get('/', async (_req, res, next) => {
+router.get('/', async (req, res, next) => {
+  // console.log(req.query)
+  const { page, limit } = req.query
   try {
-    const contacts = await Contacts.listContacts()
+    const { contacts, count } = await Contacts.listContacts({ page, limit })
     console.log('contacts', contacts)
     return res.json({
       status: 'success',
       code: 200,
-      data: contacts,
-
+      data: { contacts, pagination: { page, limit, allContactsCount: count } },
     })
   } catch (e) {
     next(e)
@@ -25,9 +29,7 @@ router.get('/:contactId', async (req, res, next) => {
       return res.json({
         status: 'success',
         code: 200,
-        data:
-          contact,
-
+        data: contact,
       })
     } else {
       return res.status(404).json({
@@ -48,7 +50,7 @@ router.post('/', validateCreateContact, async (req, res, next) => {
     return res.status(201).json({
       status: 'success',
       code: 201,
-      data: contact
+      data: contact,
     })
   } catch (e) {
     next(e)
@@ -69,8 +71,7 @@ router.delete('/:contactId', async (req, res, next) => {
     return res.json({
       status: 'success',
       code: 200,
-      data:
-          contact,
+      data: contact,
     })
   } catch (e) {
     next(e)
@@ -79,16 +80,13 @@ router.delete('/:contactId', async (req, res, next) => {
 
 router.put('/:contactId', validateUpdateContact, async (req, res, next) => {
   try {
-    const contact = await Contacts.updateContact(
-      req.params.contactId,
-      req.body
-    )
+    const contact = await Contacts.updateContact(req.params.contactId, req.body)
     console.log(contact)
     if (contact) {
       return res.json({
         status: 'success',
         code: 200,
-        data: contact
+        data: contact,
       })
     } else {
       return res.json({
@@ -113,6 +111,5 @@ router.patch('/contactById/favorite', async (req, res, next) => {
   } catch (e) {
     next(e)
   }
-}
-)
+})
 module.exports = router
